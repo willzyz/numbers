@@ -1,25 +1,48 @@
-exp = 3;
+%exp = 4;
 
 % ---- define netconfig ----
 
-hsz1 = 200; % default 80
+% hsz1 = 80; % default 80
 hsz2 = 400; % default 400
-hsz3 = 600;
 
 netconfig.inputsize = 900;
-netconfig.layersizes = {hsz1, hsz2, hsz3, hsz2, hsz1, 900};
+netconfig.layersizes = {hsz1, hsz2, hsz1, 900};
 netconfig.lambda = 0;
 netconfig.act_func = @sigmoid_act;
 netconfig.der_func = @sigmoid_deriv;
 netconfig.cost_func = @spcost_logcosh;
 netconfig.weightcost = 0;
 netconfig.use_gpu = 0;
-netconfig.exp_count  = exp;
+netconfig.maxIter_pretrain = 1000;
+netconfig.maxIter_optimize = 1000;
 
+netconfig.exp_count  = exp;
+netconfig.use_denoise = use_denoise;
+netconfig.noise_level = noise_level;
+netconfig.use_whiten = use_whiten; 
+
+fprintf('loading training data ......\n');
 load zorzi_data.mat
+%D = D(:, 1:5e3);
+%netconfig.meanD = mean(D, 2);
+%D = bsxfun(@minus, D, netconfig.meanD);
+%netconfig.stdD = std(D, 1, 2); 
+%D = bsxfun(@rdivide, D, netconfig.stdD);
+
+if netconfig.use_whiten
+    netconfig.meanD = mean(D(:));
+    D = D - netconfig.meanD; 
+    %netconfig.stdD = std(D(:));
+    %D = D./netconfig.stdD;
+    
+    fprintf('whitening training data ......\n');
+    [V, E, ~] = pca(D);
+    netconfig.whitenM = E*V;
+    D = netconfig.whitenM*D; 
+end
 
 stackfull = pretrain_nbr(netconfig, D);
-% load /afs/cs/u/wzou/scratch/numbers/savemodels/pretrain_stackfull_exp1.mat; 
 pretrain_params = stack2paramssimple(stackfull, netconfig);
 optimizeall_nbr(pretrain_params, netconfig, D);
 
+train_classifier

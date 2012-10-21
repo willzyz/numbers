@@ -32,19 +32,22 @@ for i = 1:nlayers/2
         params = gsingle(params); 
     end
     
-    % add noise to data
-    % data_noise = addnoise(data, 0); 
-    
     % run minFunc
     options.DerivativeCheck = false;
     options.Method = 'lbfgs';
-    options.maxIter = 1000;
+    options.maxIter = netconfig.maxIter_pretrain;
     options.display = 'on';
     options.logfile = 'log.txt'; % optional
     
-    fprintf('training layer %d\n', i);
-    [optparams, value, output] = minFunc( @(p) autoeloss(p, nc, data), ...
-                                params, options);
+    fprintf(' ------- pre-training layer %d ------- \n', i);
+    if netconfig.use_denoise
+        [optparams, value, output] = minFunc( @(p) autoeloss_denoise(p, nc, addnoise(data, netconfig.noise_level, 'binary'), data), ...
+                                              params, options);
+    else
+        [optparams, value, output] = minFunc( @(p) autoeloss(p, nc, data), ...
+                                              params, options);
+    end
+    
     obj_vals{i} = value;
     opt_outputs{i} = output;
     

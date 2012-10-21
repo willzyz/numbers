@@ -7,7 +7,6 @@ function [f, g, fplain] = nbr_nn_grad(theta, numh1, numh2, numh3, X, y, wc_reg, 
 [w1, b1, w2, b2, wc, bc] = reorg_theta(theta, X, numh1, numh2, numh3);
 
 %% fwprop
-for l = 1:
 z1 = bsxfun(@plus, w1*X, b1);
 a1 = sigmoid_act(z1);
 
